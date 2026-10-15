@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <!-- Background Circle with Gradient -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="100%" stop-color="#17a2b8" />
+    </linearGradient>
+    <linearGradient id="arrowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+  </defs>
+
+  <!-- Base Circle -->
+  <circle cx="250" cy="250" r="230" fill="url(#bgGradient)" />
+
+  <!-- Stylized 'P' & Growth Arrow Icon -->
+  <path d="M 170 130 L 170 370 M 170 130 L 290 130 C 340 130, 340 230, 290 230 L 170 230" 
+        stroke="#ffffff" 
+        stroke-width="36" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        fill="none" />
+
+  <!-- Growth Arrow Symbol -->
+  <path d="M 230 310 L 300 240 L 350 290 L 410 210" 
+        stroke="url(#arrowGradient)" 
+        stroke-width="28" 
+        stroke-linecap="round" 
+        stroke-linejoin="round" 
+        fill="none" />
+  
+  <polyline points="370,210 410,210 410,250" 
+            stroke="url(#arrowGradient)" 
+            stroke-width="28" 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            fill="none" />
+</svg>
+  

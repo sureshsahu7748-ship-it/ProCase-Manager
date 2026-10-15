@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "ProCash Manager",
+  "short_name": "ProCash",
+  "description": "स्मार्ट बजट ट्रैकर, व्यक्तिगत खर्च प्रबंधन और दोस्तों के साथ ग्रुप स्प्लिट",
+  "lang": "hi",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#4f46e5",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

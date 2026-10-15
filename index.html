@@ -1,0 +1,275 @@
+    <!DOCTYPE html>
+<html lang="hi">
+<head>
+    <!-- Dynamic Favicon Icon Tag -->
+    <link id="appFavicon" rel="icon" type="image/svg+xml" href="logo.svg">
+
+    <link rel="manifest" href="manifest.json">
+    <!-- PWA & Apple Touch Icons -->
+
+    <meta name="theme-color" content="#4f46e5">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="ProCash Manager - स्मार्ट बजट ट्रैकर, व्यक्तिगत खर्च प्रबंधन एवं दोस्तों के ग्रुप स्प्लिट ऐप।">
+    <link rel="canonical" href="https://procase-manager.vercel.app/">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://procase-manager.vercel.app/">
+    <meta property="og:title" content="प्रोकैश मैनेजर - बजट, पर्सनल एवं ग्रुप स्प्लिट">
+    <meta property="og:description" content="स्मार्ट बजट ट्रैकर, व्यक्तिगत खर्च प्रबंधन एवं दोस्तों के ग्रुप स्प्लिट ऐप।">
+    <meta property="og:image" content="https://procase-manager.vercel.app/icon-512.png">
+    <title>प्रोकैश मैनेजर - बजट, पर्सनल एवं ग्रुप स्प्लिट</title>
+    <!-- PWA Manifest & Theme Color -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="google-site-verification" content="tJY9P_aA1DVGyLM_7mPaArhxTtZm5DzMyGCmLcgueu8" />
+    <link rel="stylesheet" href="style.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="billing.js" defer></script>
+    <script src="script.js" defer></script>
+    <script src="biz.js" defer></script>
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+
+</head>
+<body id="bodyTag" class="dark-theme">
+<div id="lockScreen" class="lock-overlay" style="display:none;">
+  <div class="lock-card">
+    <div class="lock-icon">🔒</div>
+    <h3 id="lockTitle">ऐप सुरक्षित है</h3>
+    <p id="lockSubText">कृपया अपना 4-अंकों का पिन दर्ज करें</p>
+    <div id="pinInputGroup">
+      <input type="password" id="oldPinInput" placeholder="पुराना पिन" maxlength="4" class="pin-input" style="display:none;" aria-label="Old PIN">
+      <input type="password" id="unlockPin" placeholder="4-अंकों का पिन" maxlength="4" class="pin-input" aria-label="Enter PIN">
+    </div>
+    <button id="verifyPinBtn" class="pin-btn">अनलॉक करें</button>
+    <div class="lock-links">
+      <button id="resetPinBtn" class="link-btn">पिन बदलें</button>
+      <button id="disablePinBtn" class="link-btn danger-link" style="display:none;">पिन बंद करें</button>
+    </div>
+  </div>
+</div>
+
+<script>
+try { if (localStorage.getItem('userAppPinHash')) document.getElementById('lockScreen').style.display = 'flex'; } catch (e) {}
+</script>
+
+<div class="app-shell" id="mainContainer">
+  <header class="app-header">
+    <div class="brand-wrap">
+      <button id="menuToggle" class="menu-toggle" type="button" aria-label="मेन्यू खोलें">☰</button>
+      <img src="logo.svg" class="brand-logo" alt="ProCash Manager">
+      <div class="brand-copy">
+        <span class="brand-kicker">PROCASH</span>
+        <h1>प्रोकैश मैनेजर</h1>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div id="userInfo" class="header-user" style="display:none;"><span id="userName"></span></div>
+      <button id="toggleThemeBtn" class="theme-btn" type="button">☀️ Light</button>
+    </div>
+  </header>
+
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+  <aside id="appSidebar" class="app-sidebar" aria-label="मुख्य मेन्यू">
+    <div class="sidebar-header">
+      <div><strong>प्रोकैश</strong><span>अकाउंट और सेटिंग</span></div>
+      <button id="closeSidebar" class="sidebar-close" type="button" aria-label="मेन्यू बंद करें">×</button>
+    </div>
+
+    <div id="sidebarProfile" class="sidebar-profile">
+      <div id="sidebarAvatar" class="sidebar-avatar">👤</div>
+      <div class="sidebar-profile-text"><strong id="sidebarUserName">गेस्ट यूज़र</strong><span id="sidebarUserStatus">लॉगिन नहीं है</span></div>
+    </div>
+
+<div class="sidebar-nav-title">ACCOUNT</div>
+    <div class="sidebar-menu">
+      <button id="loginBtn" class="sidebar-item sidebar-login" type="button"><span class="sidebar-icon">🔑</span><span>लॉग इन / साइन अप</span></button>
+      <button id="profileEditBtn" class="sidebar-item profile-edit-item" type="button"><span class="sidebar-icon">✏️</span><span>प्रोफ़ाइल एडिट करें</span></button>
+      <button id="backupBtn" class="sidebar-item" type="button"><span class="sidebar-icon">☁️</span><span>बैकअप लें</span></button>
+      <button id="restoreBtn" class="sidebar-item" type="button"><span class="sidebar-icon">📥</span><span>रीस्टोर करें</span></button>
+      <button id="openPinBtn" class="sidebar-item" type="button"><span class="sidebar-icon">🔒</span><span>पिन सुरक्षा</span></button>
+      <button id="logoutBtn" class="sidebar-item sidebar-danger" type="button" style="display:none;"><span class="sidebar-icon">🚪</span><span>लॉगआउट</span></button>
+    </div>
+
+    <div class="sidebar-footer-note"><strong>🔐 आपकी सुरक्षा</strong><span>PIN और Google Login अलग-अलग सुरक्षा सुविधाएँ हैं।</span></div>
+    <div class="login-tip"><div class="login-tip-title">💡 Google Login</div><p>Google से लॉगिन करने पर आपके खर्च आपके अकाउंट से जुड़े रहते हैं और आपके user expenses को cloud में sync रखने में मदद मिलती है। जिससे अगर बाद में आपका खर्च का डेटा मिट जाए तो उसे दोबारा प्राप्त कर सकते है |</p></div>
+  </aside>
+
+  <div id="profileModal" class="profile-modal" style="display:none;">
+    <div class="profile-modal-card">
+      <div class="profile-modal-head"><div><span class="eyebrow">ACCOUNT</span><h3>प्रोफ़ाइल एडिट करें</h3><p>Google account में दिखने वाला नाम बदलें</p></div><button id="closeProfileModal" class="sidebar-close" type="button">×</button></div>
+      <label for="profileNameInput">नाम</label>
+      <input id="profileNameInput" type="text" maxlength="60" placeholder="अपना नाम लिखें">
+      <button id="saveProfileBtn" class="set-btn profile-save-btn" type="button">सेव करें</button>
+    </div>
+  </div>
+
+  <main class="app-content">
+    <section id="page-dashboard" class="app-page active">
+      <div class="page-hero">
+        <div><span class="eyebrow">सारांश</span><h2>आपका वित्तीय डैशबोर्ड</h2><p>कम खर्च, बेहतर नियंत्रण।</p></div>
+        <button class="hero-action" data-page="expenses" type="button">＋ खर्च</button>
+      </div>
+      <div class="dashboard-grid">
+        <div class="dash-box stat-income"><span>कुल आय</span><strong id="displayIncome">₹0</strong></div>
+        <div class="dash-box stat-expense"><span>कुल खर्च</span><strong id="totalExpense">₹0</strong></div>
+        <div class="dash-box stat-saving"><span>बचत</span><strong id="netSavings" class="text-success">₹0</strong></div>
+      </div>
+      <div class="dashboard-card">
+        <div class="card-title-row"><div><span class="eyebrow">त्वरित काम</span><h3>आज क्या करना है?</h3></div></div>
+        <div class="quick-grid">
+          <button data-page="expenses" type="button"><span>➕</span><b>खर्च जोड़ें</b><small>नया transaction</small></button>
+          <button data-page="groups" type="button"><span>👥</span><b>ग्रुप खोलें</b><small>Shared expenses</small></button>
+          <button data-page="budget" type="button"><span>🎯</span><b>बजट देखें</b><small>Limits & planning</small></button>
+          <button data-page="reports" type="button"><span>📊</span><b>रिपोर्ट देखें</b><small>रिपोर्ट</small></button>
+          <button data-page="biz" type="button"><span>💼</span><b>बिज़नेस सूट</b><small>Invoices & tax PDF</small></button>
+        </div>
+      </div>
+      <div class="dashboard-insight"><span>📌</span><div><strong>एक छोटी आदत</strong><p>हर खर्च उसी दिन दर्ज करें। इससे आपकी रिपोर्ट और बचत दोनों सही रहेंगी।</p></div></div>
+    </section>
+
+    <section id="page-expenses" class="app-page">
+      <div class="page-hero"><div><span class="eyebrow">लेन-देन</span><h2>मेरे खर्च</h2><p>खर्च जोड़ें, खोजें और व्यवस्थित करें।</p></div></div>
+
+      <div class="two-col"><div class="col-form">
+      <div class="expense-entry-card form-section">
+        <div class="section-heading"><div><span class="eyebrow">नया खर्च</span><h3 id="formTitle">➕ व्यक्तिगत खर्च जोड़ें</h3></div></div>
+        <input type="hidden" id="editExpenseId" value="">
+        <div class="form-row">
+          <input type="text" id="desc" placeholder="खर्च विवरण — जैसे Petrol, Rice, Rent" aria-label="Expense Description">
+          <button type="button" class="mic-btn" id="micBtn" aria-label="Voice Input">🎤</button>
+        </div>
+        <div class="form-row"><input type="number" id="amount" placeholder="रकम (Amount)" aria-label="Expense Amount"><input type="date" id="date" aria-label="Expense Date"></div>
+        <div class="form-row"><select id="category" aria-label="Expense Category">
+          <option value="खाना">खाना</option><option value="यात्रा">यात्रा</option><option value="मनोरंजन">मनोरंजन</option><option value="बिल/किराया">बिल/किराया</option><option value="खरीदारी">खरीदारी</option><option value="दवाई">दवाई</option><option value="शिक्षा">शिक्षा</option><option value="अन्य" selected>अन्य</option>
+        </select></div>
+        <div class="form-row"><button id="addExpenseBtn" class="add-btn">खर्च सेव करें</button><button id="cancelEditBtn" class="btn-clear" style="display:none;">रद्द करें</button></div>
+      </div>
+
+      <div class="scan-box" id="scanBoxTrigger"><label class="scan-label" for="receiptFile">📷 रसीद स्कैन करें</label><input type="file" id="receiptFile" accept="image/*" style="display:none;"><div id="scanStatus">फोटो से खर्च की जानकारी पढ़ें</div></div>
+
+      </div><div class="col-list">
+      <div class="list-toolbar">
+        <div><span class="eyebrow">इतिहास</span><h3>खर्च का इतिहास</h3></div>
+        <div class="filter-row"><input type="text" id="searchInput" placeholder="🔎 खोजें..." aria-label="Search Expenses"><select id="filterCategory" aria-label="Filter Category"><option value="सभी">सभी</option><option value="खाना">खाना</option><option value="यात्रा">यात्रा</option><option value="मनोरंजन">मनोरंजन</option><option value="बिल/किराया">बिल/किराया</option><option value="खरीदारी">खरीदारी</option><option value="दवाई">दवाई</option><option value="शिक्षा">शिक्षा</option><option value="अन्य">अन्य</option></select></div>
+      </div>
+      <div id="expenseList"></div>
+      </div></div>
+    </section>
+
+    <section id="page-groups" class="app-page">
+      <div class="page-hero"><div><span class="eyebrow">ग्रुप हिसाब</span><h2>ग्रुप खर्च</h2><p>दोस्तों, रूममेट्स या ट्रिप का हिसाब अलग रखें।</p></div></div>
+      <div class="group-card form-section split-section">
+        <div class="section-heading"><div><span class="eyebrow">साझा खर्च</span><h3>👥 ग्रुप हिसाब</h3><p>कौन कितना देगा, साफ हिसाब रखें।</p></div></div>
+        <div id="groupSwitcher" class="group-switcher" aria-label="आपके ग्रुप"></div>
+        <div id="createGroupBox">
+          <div id="createGroupTitle" class="create-group-title" style="display:none;">➕ नया ग्रुप बनाएँ</div>
+          <div class="form-row"><input type="text" id="groupName" placeholder="ग्रुप का नाम — जैसे Goa Trip"></div>
+          <div class="form-row"><input type="text" id="groupMembers" placeholder="सदस्य — Rahul, Amit, Vikash"></div>
+          <div class="form-row create-group-actions"><button id="createGroupBtn" class="add-btn group-create-btn">ग्रुप बनाएं</button><button id="cancelCreateGroupBtn" type="button" class="btn-clear" style="display:none;">रद्द करें</button></div>
+        </div>
+        <div id="splitExpenseForm" style="display:none; margin-top:18px;">
+          <div class="group-header"><div><span class="eyebrow">चालू ग्रुप</span><h3 id="activeGroupName" class="group-title"></h3></div><div id="groupHeaderActions" class="group-header-actions">
+            <button type="button" id="inviteGroupBtn" class="group-action-btn group-invite-btn">👤 <span>बुलाएँ</span></button>
+            <button type="button" id="shareGroupBtn" class="group-action-btn group-share-btn">🔗 <span>शेयर</span></button>
+            <button type="button" id="leaveGroupBtn" class="group-action-btn group-delete-btn" style="display:none;">🚪 ग्रुप छोड़ें</button>
+            <button type="button" id="deleteGroupBtn" class="group-action-btn group-delete-btn">🗑️ <span>ग्रुप डिलीट</span></button>
+          </div></div>
+          <div class="form-row"><input type="text" id="splitDesc" placeholder="ग्रुप खर्च का नाम"><input type="number" id="splitAmount" placeholder="रकम"></div>
+          <div class="form-row"><select id="paidBySelect" aria-label="Paid By Member"></select></div>
+          <div class="form-row"><button type="button" id="addSplitExpenseBtn" class="add-btn">ग्रुप में खर्च जोड़ें</button><button id="cancelGroupExpenseEditBtn" type="button" class="btn-clear" style="display:none;">रद्द करें</button></div>
+        </div>
+        <div id="settlementReport" class="settlement-box"></div>
+        <button id="downloadGroupPdfBtn" class="btn-pdf group-pdf-btn" style="display:none;">📄 ग्रुप हिसाब की PDF</button>
+      </div>
+    </section>
+
+    <section id="page-budget" class="app-page">
+      <div class="page-hero"><div><span class="eyebrow">PLANNING</span><h2>बजट & लिमिट</h2><p>महीने की सीमा तय करें और खर्च को नियंत्रण में रखें।</p></div></div>
+      <div class="settings-card">
+        <div class="section-heading"><div><span class="eyebrow">MONTHLY PLAN</span><h3>💰 आय और मासिक बजट</h3></div></div>
+        <div class="form-row"><select id="currencySymbol" class="curr-select" aria-label="Currency Symbol"><option value="₹">₹ (INR)</option><option value="$">$ (USD)</option><option value="€">€ (EUR)</option></select><input type="number" id="incomeInput" placeholder="मासिक आय"></div>
+        <div class="form-row"><input type="number" id="budgetInput" placeholder="कुल मासिक बजट"><button id="saveBudgetBtn" class="set-btn">सेट करें</button></div>
+      </div>
+      <div class="settings-card">
+        <div class="section-heading"><div><span class="eyebrow">CATEGORY LIMITS</span><h3>🎯 कैटेगरी बजट लिमिट</h3></div></div>
+        <div class="form-row"><select id="budgetCategorySelect" aria-label="Select Category for Budget Limit"><option value="खाना">खाना</option><option value="यात्रा">यात्रा</option><option value="मनोरंजन">मनोरंजन</option><option value="बिल/किराया">बिल/किराया</option><option value="खरीदारी">खरीदारी</option><option value="दवाई">दवाई</option><option value="शिक्षा">शिक्षा</option><option value="अन्य">अन्य</option></select><input type="number" id="categoryBudgetLimit" placeholder="लिमिट"><button id="setCategoryBudgetBtn" class="set-btn">सेव</button></div>
+        <div id="categoryBudgetAlerts" class="budget-alerts"></div>
+      </div>
+    </section>
+
+    <section id="page-reports" class="app-page">
+      <div class="page-hero"><div><span class="eyebrow">विश्लेषण</span><h2>रिपोर्ट्स</h2><p>आपका पैसा कहाँ जा रहा है, यहाँ देखें।</p></div></div>
+      <div class="chart-container report-chart"><div class="card-title-row"><div><span class="eyebrow">SPENDING ANALYSIS</span><h3>📊 कैटेगरी के हिसाब से खर्च</h3></div></div><div class="chart-wrapper"><canvas id="categoryChart"></canvas></div></div>
+      <div class="report-actions">
+        <div class="report-card"><span>📄</span><div><strong>PDF रिपोर्ट</strong><p>पूरा खर्च रिकॉर्ड PDF में सेव करें।</p></div><button id="downloadPdfBtn" class="btn-pdf">डाउनलोड</button></div>
+        <div class="report-card"><span>📊</span><div><strong>CSV रिपोर्ट</strong><p>डेटा को spreadsheet में इस्तेमाल करें।</p></div><button id="downloadReportBtn" class="btn-csv">डाउनलोड</button></div>
+        <div class="report-card danger-card"><span>🗑️</span><div><strong>सारा डेटा रीसेट</strong><p>यह action आपके local खर्च हटाएगा।</p></div><button id="clearAllBtn" class="btn-clear">रीसेट</button></div>
+        <div class="report-card danger-card" id="accountDeleteCard" style="display:none;"><span>🧨</span><div><strong>अकाउंट डिलीट करें</strong><p>आपका अकाउंट और Cloud का सारा डेटा हमेशा के लिए हट जाएगा</p></div><button id="deleteAccountBtn" class="btn-clear">डिलीट</button></div>
+      </div>
+    </section>
+
+    <section id="page-biz" class="app-page"></section>
+
+    <section id="page-more" class="app-page">
+      <div class="page-hero"><div><span class="eyebrow">सेटिंग और जानकारी</span><h2>और जानकारी</h2><p>ऐप की सुरक्षा, गाइड और जरूरी जानकारी।</p></div></div>
+      <div class="info-card accent-amber"><h3>💡 स्मार्ट फाइनेंस टिप</h3><p><strong>सलाह:</strong> अपनी मासिक आय का कम से कम 20% हिस्सा बचत के लिए अलग रखने की कोशिश करें और अनियोजित खर्चों पर सीमा रखें।</p></div>
+      <div class="info-card accent-green"><h3>💰 पैसे बचाने के नियम</h3><ul><li><strong>50/30/20:</strong> आय का 50% आवश्यकताओं पर, 30% इच्छाओं पर और 20% बचत पर खर्च करें।</li><li><strong>24 घंटे का नियम:</strong> गैर-ज़रूरी वस्तु खरीदने से पहले 24 घंटे रुककर विचार करें   कि क्या आपको इस सामान की सच में जरूरत है </li><li><strong>स्मार्ट बजटिंग:</strong> हर महीने प्रोकैश मैनेजर में कैटेगरी बजट लिमिट सेट करें।</li></ul></div>
+      <div class="info-card accent-blue"><h3>📖 ऐप गाइड</h3><p>व्यक्तिगत खर्च दर्ज करें, ग्रुप में shared expenses बाँटें, बजट सेट करें और रिपोर्ट से पूरा हिसाब देखें।</p></div>
+      <div class="info-card accent-purple faq-card"><h3>❓ FAQ</h3>
+        <details><summary>प्रोकैश मैनेजर क्या है?</summary><p>ProCash Manager एक आसान ऐप है, जिसमें आप अपनी कमाई, रोज़ के खर्च और बचत का हिसाब रख सकते हैं। दोस्तों या रिश्तेदारों के साथ हुए खर्च को Splitter में डालें और यह अपने आप बताएगा कि किसे कितने पैसे देने हैं। आप अपने दोस्तों को Invite भी कर सकते हैं, ताकि वे भी ग्रुप का खर्च देख सकें।</p></details>
+        <details><summary>क्या मेरा डेटा सुरक्षित है?</summary><p> हां ,इसमें लॉक लगा सकते है जिससे सिर्फ आप ही अपने डेटा को देख पाएंगे  | नहीं तो आप इसे हटा भी सकते है </p></details>
+        <details><summary>क्या यह offline चलता है?</summary><p>हाँ, ये ऐप ऑफलाइन भी काम करता है , आप इसमें कुछ भी खर्च  जोड़ और हटा सकते है | बस आपको cloud backup/restore के लिए internet चाहिए।</p></details>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav" id="bottomNav" aria-label="मुख्य नेविगेशन">
+    <button class="page-nav-item active" data-page="dashboard" type="button"><span>⌂</span><b>होम</b></button>
+    <button class="page-nav-item" data-page="biz" type="button"><span>💼</span><b>बिज़नेस</b></button>
+    <button class="page-nav-add" data-page="expenses" type="button"><span>＋</span></button>
+    <button class="page-nav-item" data-page="groups" type="button"><span>👥</span><b>ग्रुप</b></button>
+    <button class="page-nav-item" data-page="more" type="button"><span>•••</span><b>और</b></button>
+  </nav>
+
+  <footer class="app-footer"><p>© 2026 ProCash Manager</p><p><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms & Conditions</a> <a href="refund.html" style="margin-left:8px">Refund Policy</a></p></footer>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyD_6BP1eeFl7hlkuHnljJkLanB7N6Od2SM",
+  authDomain: "procase--manager.firebaseapp.com",
+  projectId: "procase--manager",
+  storageBucket: "procase--manager.firebasestorage.app",
+  messagingSenderId: "894543154228",
+  appId: "1:894543154228:web:fa7087e09aba5593904e61",
+  measurementId: "G-4FBRLCJC8H"
+};
+// Firebase लोड न हो (नेटवर्क/ब्लॉक) तब भी ऐप ऑफ़लाइन चलता रहे
+var db;
+try {
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+} catch (e) {
+  console.warn('Firebase उपलब्ध नहीं:', e.message);
+  db = undefined;
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(() => {}));
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+</html>

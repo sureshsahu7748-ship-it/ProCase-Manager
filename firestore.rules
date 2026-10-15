@@ -1,0 +1,160 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // Pro तभी माना जाएगा जब सर्वर (webhook) ने proUntil भविष्य में लिखा हो
+    function isPro(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid)/billing/status)
+        && get(/databases/$(database)/documents/users/$(uid)/billing/status).data.proUntil > request.time.toMillis();
+    }
+
+    // ---------------------------------------------------------
+    // यूज़र का अपना डेटा: सिर्फ़ वही यूज़र पढ़-लिख सकता है
+    // ---------------------------------------------------------
+    match /users/{uid} { allow read, write: if isOwner(uid); }
+    match /users/{uid}/expenses/{id} { allow read, write: if isOwner(uid); }
+    match /users/{uid}/groupRefs/{id} { allow read, write: if isOwner(uid); }
+
+    // क्लाउड बैकअप: बनाना/बदलना सिर्फ़ Pro को, पढ़ना/हटाना हर मालिक को
+    match /users/{uid}/backups/{id} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if isOwner(uid) && isPro(uid);
+    }
+
+    // बिलिंग: यूज़र सिर्फ़ पढ़ सकता है, लिखना सिर्फ़ सर्वर (Admin SDK) के पास है
+    match /users/{uid}/billing/{id} {
+      allow read: if isOwner(uid);
+      allow write: if false;
+    }
+
+    // ---------------------------------------------------------
+    // ग्रुप इनवाइट: टोकन = गुप्त चाबी (लंबा और रैंडम)
+    // ---------------------------------------------------------
+    match /groupInvites/{token} {
+      allow get: if signedIn();      // जुड़ने वाले को पढ़ना पड़ता है
+      allow list: if false;          // कोई सारे इनवाइट की सूची नहीं निकाल सकता
+
+      allow create: if signedIn()
+        && token.size() >= 24
+        && request.resource.data.keys().hasOnly(['groupId', 'ownerUid', 'active'])
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.groupId is string
+        && request.resource.data.groupId.size() > 0
+        && request.resource.data.active == true;
+
+      // सिर्फ़ मालिक, और सिर्फ़ active बदल सकता है (groupId/ownerUid नहीं)
+      allow update: if signedIn()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['groupId', 'ownerUid', 'active'])
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.groupId == resource.data.groupId
+        && request.resource.data.active is bool;
+
+      allow delete: if signedIn() && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ---------------------------------------------------------
+    // ग्रुप
+    // ---------------------------------------------------------
+    match /groups/{groupId} {
+
+      function uidsOf(d) { return d.get('memberUids', []); }
+      function isMemberOf(d) { return signedIn() && request.auth.uid in uidsOf(d); }
+      function isGroupOwner(d) { return signedIn() && d.get('ownerUid', '') == request.auth.uid; }
+
+      // इस ग्रुप का इनवाइट मौजूद, चालू, और इसी ग्रुप/मालिक का हो
+      function inviteOpen(d) {
+        return exists(/databases/$(database)/documents/groupInvites/$(d.get('inviteToken', '_')))
+          && get(/databases/$(database)/documents/groupInvites/$(d.get('inviteToken', '_'))).data.active == true
+          && get(/databases/$(database)/documents/groupInvites/$(d.get('inviteToken', '_'))).data.groupId == groupId
+          && get(/databases/$(database)/documents/groupInvites/$(d.get('inviteToken', '_'))).data.ownerUid == d.get('ownerUid', '');
+      }
+
+      // पढ़ना: मालिक/सदस्य, या जुड़ने वाला (सिर्फ़ जब इनवाइट चालू हो)
+      allow get: if isGroupOwner(resource.data)
+        || isMemberOf(resource.data)
+        || (signedIn() && inviteOpen(resource.data));
+
+      // सूची सिर्फ़ अपने ग्रुप की (ऐप where memberUids array-contains uid चलाता है)
+      allow list: if signedIn() && request.auth.uid in resource.data.memberUids;
+
+      // बनाना: बनाने वाला ही मालिक और अकेला शुरुआती सदस्य; इनवाइट उसी batch में बने
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.groupId == groupId
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.memberUids is list
+        && request.resource.data.memberUids.size() == 1
+        && request.resource.data.memberUids[0] == request.auth.uid
+        && request.resource.data.members is list
+        && request.resource.data.members.size() >= 1
+        && request.resource.data.members.size() <= 50
+        && request.resource.data.expenses is list
+        && request.resource.data.inviteToken is string
+        && getAfter(/databases/$(database)/documents/groupInvites/$(request.resource.data.inviteToken)).data.ownerUid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/groupInvites/$(request.resource.data.inviteToken)).data.groupId == groupId
+        && getAfter(/databases/$(database)/documents/groupInvites/$(request.resource.data.inviteToken)).data.active == true;
+
+      // 1) मालिक: सदस्य/नाम/खर्च बदल सकता है; मालिकाना हक और इनवाइट टोकन नहीं बदल सकता
+      allow update: if isGroupOwner(resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.groupId == groupId
+        && (resource.data.get('inviteToken', null) == null
+            || request.resource.data.inviteToken == resource.data.inviteToken)
+        && request.resource.data.inviteToken is string
+        && request.resource.data.name is string
+        && request.resource.data.name.size() <= 100
+        && request.resource.data.memberUids is list
+        && request.resource.data.memberUids.hasAll([resource.data.ownerUid])
+        && request.resource.data.memberUids.size() <= 50
+        && request.resource.data.members is list
+        && request.resource.data.members.size() <= 50
+        && request.resource.data.expenses is list;
+
+      // 2) सदस्य: सिर्फ़ खर्च की सूची बदल सकता है (पुराने ग्रुप में groupId जुड़ना भी चलेगा)
+      allow update: if isMemberOf(resource.data)
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.memberUids == resource.data.memberUids
+        && request.resource.data.members == resource.data.members
+        && request.resource.data.get('inviteToken', null) == resource.data.get('inviteToken', null)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['expenses', 'groupId'])
+        && request.resource.data.groupId == groupId
+        && request.resource.data.expenses is list
+        && request.resource.data.expenses.size() <= 5000;
+
+      // 3) सदस्य ग्रुप छोड़ सकता है: सिर्फ़ ख़ुद को memberUids से हटा सकता है (मालिक नहीं)
+      allow update: if isMemberOf(resource.data)
+        && request.auth.uid != resource.data.get('ownerUid', '')
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids'])
+        && request.resource.data.memberUids.toSet()
+             == resource.data.memberUids.toSet().difference([request.auth.uid].toSet());
+
+      // 4) नया सदस्य जुड़ना: सिर्फ़ ख़ुद को, एक नाम के साथ, और सिर्फ़ चालू इनवाइट से
+      allow update: if signedIn()
+        && !(request.auth.uid in uidsOf(resource.data))
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids', 'members'])
+        && request.resource.data.memberUids is list
+        && request.resource.data.memberUids.size() == resource.data.memberUids.size() + 1
+        && request.resource.data.memberUids.size() <= 50
+        && request.resource.data.memberUids.hasAll(resource.data.memberUids)
+        && request.auth.uid in request.resource.data.memberUids
+        && request.resource.data.members is list
+        && request.resource.data.members.size() == resource.data.members.size() + 1
+        && request.resource.data.members.hasAll(resource.data.members)
+        && inviteOpen(resource.data);
+
+      allow delete: if isGroupOwner(resource.data);
+    }
+
+    // बाकी सब कुछ बंद
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
