@@ -1,6 +1,6 @@
-// ProCash Manager - Service Worker
+ // ProCash Manager - Service Worker
 // हर बार ऐप की फ़ाइलें बदलें तो सिर्फ़ यह वर्ज़न नंबर बढ़ा दें (v26 -> v27)
-const CACHE_NAME = 'procash-v28';
+const CACHE_NAME = 'procash-v29';
 
 // ऐप की अपनी फ़ाइलें (ये ऑफ़लाइन के लिए पहले से सेव होंगी)
 const CORE_ASSETS = [
