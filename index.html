@@ -1,6 +1,6 @@
-    <!DOCTYPE html>
-<html lang="hi">
-<head>
+     <!DOCTYPE html>
+     <html lang="hi">
+     <head>
     <!-- Dynamic Favicon Icon Tag -->
     <link id="appFavicon" rel="icon" type="image/svg+xml" href="logo.svg">
 
@@ -224,7 +224,14 @@ try { if (localStorage.getItem('userAppPinHash')) document.getElementById('lockS
     <section id="page-biz" class="app-page"></section>
 
     <section id="page-more" class="app-page">
-      <div class="page-hero"><div><span class="eyebrow">सेटिंग और जानकारी</span><h2>और जानकारी</h2><p>ऐप की सुरक्षा, गाइड और जरूरी जानकारी।</p></div></div>
+      <div class="page-hero"><div><span class="eyebrow">ProCash</span><h2>सेटिंग</h2><p>खाता, सुरक्षा, बैकअप और रिपोर्ट, सब एक जगह।</p></div></div>
+      <div class="settings-group"><h3 class="settings-title">खाता</h3><div class="settings-list"><button type="button" class="settings-row" data-click="loginBtn" data-mirror="loginBtn"><span class="s-ico">🔑</span><span class="s-txt"><b>लॉग इन / साइन अप</b><small>Google या ईमेल से अपने खाते से जुड़ें</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row" data-click="profileEditBtn" data-mirror="profileEditBtn"><span class="s-ico">✏️</span><span class="s-txt"><b>प्रोफ़ाइल एडिट करें</b><small>अपनी प्रोफ़ाइल की जानकारी बदलें</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row danger" data-click="logoutBtn" data-mirror="logoutBtn"><span class="s-ico">🚪</span><span class="s-txt"><b>लॉगआउट</b><small>इस डिवाइस से खाते से बाहर निकलें</small></span><i class="s-chev">›</i></button></div></div>
+      <div class="settings-group"><h3 class="settings-title">सुरक्षा और बैकअप</h3><div class="settings-list"><button type="button" class="settings-row" data-click="openPinBtn"><span class="s-ico">🔒</span><span class="s-txt"><b>पिन सुरक्षा</b><small>ऐप पर पिन लॉक लगाएँ, बदलें या बंद करें</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row" data-click="backupBtn"><span class="s-ico">☁️</span><span class="s-txt"><b>बैकअप लें</b><small>अपना डेटा क्लाउड में सुरक्षित रखें</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row" data-click="restoreBtn"><span class="s-ico">📥</span><span class="s-txt"><b>रीस्टोर करें</b><small>पुराना बैकअप वापस लाएँ</small></span><i class="s-chev">›</i></button></div></div>
+      <div class="settings-group"><h3 class="settings-title">बजट और रिपोर्ट</h3><div class="settings-list"><button type="button" class="settings-row" data-go="budget"><span class="s-ico">🎯</span><span class="s-txt"><b>बजट और कैटेगरी लिमिट</b><small>महीने का बजट और हर कैटेगरी की सीमा</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row" data-go="reports"><span class="s-ico">📈</span><span class="s-txt"><b>रिपोर्ट और चार्ट</b><small>खर्च का पूरा हिसाब देखें</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row" data-click="downloadPdfBtn"><span class="s-ico">📄</span><span class="s-txt"><b>PDF रिपोर्ट</b><small>पूरा खर्च रिकॉर्ड PDF में सेव करें</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row" data-click="downloadReportBtn"><span class="s-ico">📊</span><span class="s-txt"><b>CSV रिपोर्ट</b><small>डेटा को spreadsheet में इस्तेमाल करें</small></span><i class="s-chev">›</i></button></div></div>
+      <div class="settings-group"><h3 class="settings-title">दिखावट</h3><div class="settings-list"><button type="button" class="settings-row" data-click="toggleThemeBtn"><span class="s-ico">🌓</span><span class="s-txt"><b>थीम बदलें</b><small>डार्क या लाइट मोड</small></span><span class="s-chip" id="settingsThemeChip">Light</span></button></div></div>
+      <div class="settings-group"><h3 class="settings-title">डेटा हटाना</h3><div class="settings-list"><button type="button" class="settings-row danger" data-click="clearAllBtn"><span class="s-ico">🗑️</span><span class="s-txt"><b>सारा डेटा रीसेट</b><small>फ़ोन में सेव सारे खर्च हट जाएँगे</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row danger" data-click="deleteAccountBtn" data-mirror="accountDeleteCard"><span class="s-ico">🧨</span><span class="s-txt"><b>अकाउंट डिलीट करें</b><small>अकाउंट और क्लाउड का सारा डेटा हमेशा के लिए हट जाएगा</small></span><i class="s-chev">›</i></button></div></div>
+      <div class="settings-group"><h3 class="settings-title">कानूनी</h3><div class="settings-list"><a class="settings-row" href="privacy.html"><span class="s-ico">🛡️</span><span class="s-txt"><b>Privacy Policy</b></span><i class="s-chev">›</i></a><a class="settings-row" href="terms.html"><span class="s-ico">📜</span><span class="s-txt"><b>Terms &amp; Conditions</b></span><i class="s-chev">›</i></a><a class="settings-row" href="refund.html"><span class="s-ico">💳</span><span class="s-txt"><b>Refund Policy</b></span><i class="s-chev">›</i></a></div></div>
+      <h3 class="settings-title settings-info-title">जानकारी और सुझाव</h3>
       <div class="info-card accent-amber"><h3>💡 स्मार्ट फाइनेंस टिप</h3><p><strong>सलाह:</strong> अपनी मासिक आय का कम से कम 20% हिस्सा बचत के लिए अलग रखने की कोशिश करें और अनियोजित खर्चों पर सीमा रखें।</p></div>
       <div class="info-card accent-green"><h3>💰 पैसे बचाने के नियम</h3><ul><li><strong>50/30/20:</strong> आय का 50% आवश्यकताओं पर, 30% इच्छाओं पर और 20% बचत पर खर्च करें।</li><li><strong>24 घंटे का नियम:</strong> गैर-ज़रूरी वस्तु खरीदने से पहले 24 घंटे रुककर विचार करें   कि क्या आपको इस सामान की सच में जरूरत है </li><li><strong>स्मार्ट बजटिंग:</strong> हर महीने प्रोकैश मैनेजर में कैटेगरी बजट लिमिट सेट करें।</li></ul></div>
       <div class="info-card accent-blue"><h3>📖 ऐप गाइड</h3><p>व्यक्तिगत खर्च दर्ज करें, ग्रुप में shared expenses बाँटें, बजट सेट करें और रिपोर्ट से पूरा हिसाब देखें।</p></div>
@@ -241,7 +248,7 @@ try { if (localStorage.getItem('userAppPinHash')) document.getElementById('lockS
     <button class="page-nav-item" data-page="biz" type="button"><span>💼</span><b>बिज़नेस</b></button>
     <button class="page-nav-add" data-page="expenses" type="button"><span>＋</span></button>
     <button class="page-nav-item" data-page="groups" type="button"><span>👥</span><b>ग्रुप</b></button>
-    <button class="page-nav-item" data-page="more" type="button"><span>•••</span><b>और</b></button>
+    <button class="page-nav-item" data-page="more" type="button"><span>⚙️</span><b>सेटिंग</b></button>
   </nav>
 
   <footer class="app-footer"><p>© 2026 ProCash Manager</p><p><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms & Conditions</a> <a href="refund.html" style="margin-left:8px">Refund Policy</a></p></footer>
