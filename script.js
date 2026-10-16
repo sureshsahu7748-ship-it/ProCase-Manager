@@ -2553,3 +2553,44 @@ if (document.readyState === "loading") {
 } else {
   initReceiptScanner();
 }
+
+
+/* =========================================================
+   सेटिंग पेज: सूची की हर पंक्ति ऐप के मौजूदा बटन/पेज को चलाती है
+   ========================================================= */
+function initSettingsPage() {
+  const page = document.getElementById('page-more');
+  if (!page) return;
+  const byId = (id) => document.getElementById(id);
+  const hiddenNow = (el) => !el || getComputedStyle(el).display === 'none';
+
+  page.addEventListener('click', (e) => {
+    const row = e.target.closest('.settings-row');
+    if (!row || row.tagName === 'A') return;
+    if (row.dataset.go && window.ProCashNav) { window.ProCashNav.go(row.dataset.go); return; }
+    const target = byId(row.dataset.click);
+    if (target) target.click();
+  });
+
+  // लॉगिन/लॉगआउट/प्रोफ़ाइल/अकाउंट-डिलीट वाली पंक्तियाँ वैसे ही दिखें जैसे असली बटन
+  const sync = () => {
+    page.querySelectorAll('[data-mirror]').forEach((row) => { row.hidden = hiddenNow(byId(row.dataset.mirror)); });
+    page.querySelectorAll('.settings-group').forEach((g) => {
+      g.hidden = ![...g.querySelectorAll('.settings-row')].some((r) => !r.hidden);
+    });
+    const chip = byId('settingsThemeChip'), t = byId('toggleThemeBtn');
+    if (chip && t) chip.textContent = t.textContent.trim();
+  };
+  const mo = new MutationObserver(sync);
+  ['loginBtn', 'profileEditBtn', 'logoutBtn', 'accountDeleteCard', 'toggleThemeBtn'].forEach((id) => {
+    const el = byId(id);
+    if (el) mo.observe(el, { attributes: true, attributeFilter: ['style', 'class'], childList: true, characterData: true, subtree: true });
+  });
+  mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  sync();
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initSettingsPage);
+} else {
+  initSettingsPage();
+}
