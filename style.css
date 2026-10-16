@@ -1,4 +1,4 @@
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
 body { background-color: #f4f6f9; color: #333; display: flex; justify-content: center; padding: 15px; }
 body.dark-theme { background-color: #121212; color: #e0e0e0; }
 
@@ -850,3 +850,22 @@ button:active:not(:disabled){transform:scale(.97);filter:brightness(1.08)}
 
 #page-biz [hidden]{display:none!important}
 .biz-chart canvas{max-width:100%}
+
+
+/* ===== सेटिंग पेज (और → सेटिंग) ===== */
+.settings-group{margin:0 0 18px}
+.settings-title{font-size:.78rem;font-weight:700;color:var(--muted);margin:0 4px 8px;letter-spacing:.02em}
+.settings-info-title{margin-top:26px}
+.settings-list{display:grid;gap:8px}
+.settings-row{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:14px;cursor:pointer;box-shadow:var(--shadow)}
+.settings-row:hover{border-color:var(--accent)}
+.settings-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.s-ico{flex:0 0 38px;height:38px;display:grid;place-items:center;border-radius:11px;font-size:1.1rem;background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.s-txt{flex:1;min-width:0;display:grid;gap:2px}
+.s-txt b{font-size:.93rem;font-weight:600}
+.s-txt small{font-size:.76rem;color:var(--muted);line-height:1.4}
+.s-chev{font-style:normal;font-size:1.5rem;line-height:1;color:var(--muted)}
+.s-chip{font-size:.78rem;color:var(--muted);padding:4px 10px;border:1px solid var(--line);border-radius:999px;white-space:nowrap}
+.settings-row.danger .s-ico{background:color-mix(in srgb,var(--danger) 14%,transparent)}
+.settings-row.danger .s-txt b{color:var(--danger)}
+.settings-row[hidden],.settings-group[hidden]{display:none!important}
