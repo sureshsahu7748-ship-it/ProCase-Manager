@@ -1,6 +1,6 @@
      <!DOCTYPE html>
-     <html lang="hi">
-     <head>
+<html lang="hi">
+<head>
     <!-- Dynamic Favicon Icon Tag -->
     <link id="appFavicon" rel="icon" type="image/svg+xml" href="logo.svg">
 
@@ -33,7 +33,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
-    <script src="billing.js" defer></script>
+    <script src="pro.js" defer></script>
     <script src="script.js" defer></script>
     <script src="biz.js" defer></script>
     <!-- SweetAlert2 CSS -->
@@ -230,7 +230,7 @@ try { if (localStorage.getItem('userAppPinHash')) document.getElementById('lockS
       <div class="settings-group"><h3 class="settings-title">बजट और रिपोर्ट</h3><div class="settings-list"><button type="button" class="settings-row" data-go="budget"><span class="s-ico">🎯</span><span class="s-txt"><b>बजट और कैटेगरी लिमिट</b><small>महीने का बजट और हर कैटेगरी की सीमा</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row" data-go="reports"><span class="s-ico">📈</span><span class="s-txt"><b>रिपोर्ट और चार्ट</b><small>खर्च का पूरा हिसाब देखें</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row" data-click="downloadPdfBtn"><span class="s-ico">📄</span><span class="s-txt"><b>PDF रिपोर्ट</b><small>पूरा खर्च रिकॉर्ड PDF में सेव करें</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row" data-click="downloadReportBtn"><span class="s-ico">📊</span><span class="s-txt"><b>CSV रिपोर्ट</b><small>डेटा को spreadsheet में इस्तेमाल करें</small></span><i class="s-chev">›</i></button></div></div>
       <div class="settings-group"><h3 class="settings-title">दिखावट</h3><div class="settings-list"><button type="button" class="settings-row" data-click="toggleThemeBtn"><span class="s-ico">🌓</span><span class="s-txt"><b>थीम बदलें</b><small>डार्क या लाइट मोड</small></span><span class="s-chip" id="settingsThemeChip">Light</span></button></div></div>
       <div class="settings-group"><h3 class="settings-title">डेटा हटाना</h3><div class="settings-list"><button type="button" class="settings-row danger" data-click="clearAllBtn"><span class="s-ico">🗑️</span><span class="s-txt"><b>सारा डेटा रीसेट</b><small>फ़ोन में सेव सारे खर्च हट जाएँगे</small></span><i class="s-chev">›</i></button><button type="button" class="settings-row danger" data-click="deleteAccountBtn" data-mirror="accountDeleteCard"><span class="s-ico">🧨</span><span class="s-txt"><b>अकाउंट डिलीट करें</b><small>अकाउंट और क्लाउड का सारा डेटा हमेशा के लिए हट जाएगा</small></span><i class="s-chev">›</i></button></div></div>
-      <div class="settings-group"><h3 class="settings-title">कानूनी</h3><div class="settings-list"><a class="settings-row" href="privacy.html"><span class="s-ico">🛡️</span><span class="s-txt"><b>Privacy Policy</b></span><i class="s-chev">›</i></a><a class="settings-row" href="terms.html"><span class="s-ico">📜</span><span class="s-txt"><b>Terms &amp; Conditions</b></span><i class="s-chev">›</i></a><a class="settings-row" href="refund.html"><span class="s-ico">💳</span><span class="s-txt"><b>Refund Policy</b></span><i class="s-chev">›</i></a></div></div>
+      <div class="settings-group"><h3 class="settings-title">कानूनी</h3><div class="settings-list"><a class="settings-row" href="privacy.html"><span class="s-ico">🛡️</span><span class="s-txt"><b>Privacy Policy</b></span><i class="s-chev">›</i></a><a class="settings-row" href="terms.html"><span class="s-ico">📜</span><span class="s-txt"><b>Terms &amp; Conditions</b></span><i class="s-chev">›</i></a><a class="settings-row" href="refund.html"><span class="s-ico">💳</span><span class="s-txt"><b>Refund Policy</b></span><i class="s-chev">›</i></a><a class="settings-row" href="contact.html"><span class="s-ico">✉️</span><span class="s-txt"><b>संपर्क और सपोर्ट</b></span><i class="s-chev">›</i></a></div></div>
       <h3 class="settings-title settings-info-title">जानकारी और सुझाव</h3>
       <div class="info-card accent-amber"><h3>💡 स्मार्ट फाइनेंस टिप</h3><p><strong>सलाह:</strong> अपनी मासिक आय का कम से कम 20% हिस्सा बचत के लिए अलग रखने की कोशिश करें और अनियोजित खर्चों पर सीमा रखें।</p></div>
       <div class="info-card accent-green"><h3>💰 पैसे बचाने के नियम</h3><ul><li><strong>50/30/20:</strong> आय का 50% आवश्यकताओं पर, 30% इच्छाओं पर और 20% बचत पर खर्च करें।</li><li><strong>24 घंटे का नियम:</strong> गैर-ज़रूरी वस्तु खरीदने से पहले 24 घंटे रुककर विचार करें   कि क्या आपको इस सामान की सच में जरूरत है </li><li><strong>स्मार्ट बजटिंग:</strong> हर महीने प्रोकैश मैनेजर में कैटेगरी बजट लिमिट सेट करें।</li></ul></div>
