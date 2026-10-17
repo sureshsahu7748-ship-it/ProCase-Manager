@@ -1,6 +1,6 @@
  // ProCash Manager - Service Worker
 // हर बार ऐप की फ़ाइलें बदलें तो सिर्फ़ यह वर्ज़न नंबर बढ़ा दें (v26 -> v27)
-const CACHE_NAME = 'procash-v29';
+const CACHE_NAME = 'procash-v31';
 
 // ऐप की अपनी फ़ाइलें (ये ऑफ़लाइन के लिए पहले से सेव होंगी)
 const CORE_ASSETS = [
@@ -8,7 +8,7 @@ const CORE_ASSETS = [
   '/index.html',
   '/style.css',
   '/script.js',
-  '/billing.js',
+  '/pro.js',
   '/biz.js',
   '/logo.svg',
   '/icon-192.png',
@@ -18,6 +18,7 @@ const CORE_ASSETS = [
   '/apple-touch-icon.png',
   '/legal-style.css',
   '/privacy.html',
+  '/contact.html',
   '/terms.html',
   '/delete-account.html',
   '/refund.html',
