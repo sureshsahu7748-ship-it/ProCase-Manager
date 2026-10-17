@@ -1,3 +1,8 @@
+ // अगर pro.js न चले (गलत फ़ाइल/नेटवर्क), तब भी ग्रुप जैसे बटन बेकार न पड़ें
+if (!window.Plan) {
+    console.warn('pro.js लोड नहीं हुआ: Pro जाँच अभी बंद है');
+    window.Plan = { isPro: () => false, guard: () => true, attach() {}, detach() {}, openPaywall() {}, cancelNow: async () => {}, state: {} };
+}
 // 🛟 SweetAlert लोड न हो पाए (जैसे पहली बार ऑफ़लाइन खुलने पर) तब भी ऐप न टूटे
 if (typeof window.Swal === 'undefined') {
     const fallbackToast = (opts) => {
@@ -1107,6 +1112,12 @@ function selectGroup(id) {
 
 function showCreateGroupUI() {
     if (Object.keys(myGroups).length >= 1 && !Plan.guard('groups')) return;
+    // पुराने चालू ग्रुप को पहले सेव करें, फिर नए ग्रुप का फ़ॉर्म खोलें
+    if (activeGroup) {
+        persistActiveGroup();
+        if (currentUser) Promise.resolve(syncGroupToFirebase()).catch(() => {});
+    }
+    ['groupName', 'groupMembers'].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ''; });
     creatingGroup = true;
     const hasGroups = Object.keys(myGroups).length > 0;
     const set = (id, display) => { const el = document.getElementById(id); if (el) el.style.display = display; };
@@ -1119,7 +1130,9 @@ function showCreateGroupUI() {
     if (report) report.innerHTML = '';
     renderGroupSwitcher();
     const nameInput = document.getElementById('groupName');
-    if (nameInput && hasGroups) nameInput.focus();
+    const formBox = document.getElementById('createGroupBox');
+    if (formBox && formBox.scrollIntoView) formBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (nameInput && hasGroups) setTimeout(() => nameInput.focus({ preventScroll: true }), 250);
 }
 
 function renderGroupSwitcher() {
