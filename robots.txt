@@ -1,4 +1,4 @@
- User-agent: *
+User-agent: *
 Allow: /
 
 Sitemap: https://procase-manager.vercel.app/sitemap.xml

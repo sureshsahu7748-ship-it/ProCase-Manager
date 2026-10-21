@@ -1,4 +1,4 @@
-     <!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="hi">
 <head>
     <!-- Dynamic Favicon Icon Tag -->
@@ -10,7 +10,24 @@
     <meta name="theme-color" content="#4f46e5">
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script>
+// पहली बार (कभी लॉगिन नहीं किया) तो भारी स्क्रिप्ट लोड होने का इंतज़ार किए बिना सीधे लॉगिन पेज; ओपनिंग एनिमेशन हर बार नहीं दोहराना
+(function () {
+  try {
+    if (sessionStorage.getItem('procash.splash')) document.documentElement.className += ' no-splash';
+    else sessionStorage.setItem('procash.splash', '1');
+    if (!navigator.onLine || localStorage.getItem('procash.hasLoggedIn')) return;
+    if (Date.now() - Number(localStorage.getItem('procash.loginSkippedAt') || 0) < 3 * 864e5) return;
+    if (sessionStorage.getItem('procash.hop')) return;
+    sessionStorage.setItem('procash.hop', '1');
+    var q = new URLSearchParams(location.search);
+    if (q.get('join') && q.get('token')) localStorage.setItem('pendingGroupInvite', JSON.stringify({ groupId: q.get('join'), token: q.get('token') }));
+    sessionStorage.removeItem('procash.splash');
+    location.replace('/auth.html?next=/');
+  } catch (e) {}
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="ProCash Manager - स्मार्ट बजट ट्रैकर, व्यक्तिगत खर्च प्रबंधन एवं दोस्तों के ग्रुप स्प्लिट ऐप।">
     <link rel="canonical" href="https://procase-manager.vercel.app/">
     <meta property="og:type" content="website">
@@ -24,26 +41,82 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="google-site-verification" content="tJY9P_aA1DVGyLM_7mPaArhxTtZm5DzMyGCmLcgueu8" />
-    <link rel="stylesheet" href="style.css">
+    <style id="splashCss">
+#splash{position:fixed;inset:0;z-index:2147483000;overflow:hidden;color:#fff;font-family:system-ui,-apple-system,"Noto Sans Devanagari",sans-serif;--e:cubic-bezier(.16,1,.3,1);background:radial-gradient(circle at 50% 40%,#10163a 0,#05070f 72%);transition:opacity .6s ease,visibility .6s,transform .7s var(--e),filter .6s ease}
+#splash.hide{opacity:0;visibility:hidden;transform:scale(1.06);filter:blur(6px)}
+#splash .sp-stage{position:absolute;top:0;bottom:0;left:50%;width:min(100%,56.25vh);width:min(100%,56.25dvh);transform:translateX(-50%);container-type:inline-size}
+#splash .sp-glow{position:absolute;left:50%;top:41%;width:96cqw;height:96cqw;margin:-48cqw 0 0 -48cqw;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.40),transparent 62%);opacity:0;animation:spFade 1.2s ease 1.3s forwards}
+#splash .sp-ic{position:absolute;left:50%;top:41%;width:46cqw;height:46cqw;margin:-23cqw 0 0 -23cqw;filter:drop-shadow(0 4cqw 8cqw rgba(79,70,229,.45))}
+#splash .sp-ic svg{display:block;width:100%;height:100%;overflow:visible}
+#splash .sp-st{fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:100 100;stroke-dashoffset:100;opacity:0}
+#splash .sp-o{stroke-width:3.5;animation:spDraw .8s cubic-bezier(.65,0,.35,1) .1s forwards}
+#splash .sp-fl{opacity:0;animation:spFade .7s ease .6s forwards}
+#splash .sp-c{animation:spDraw .8s cubic-bezier(.6,0,.3,1) .85s forwards}
+#splash .sp-p{animation:spDraw .85s cubic-bezier(.6,0,.3,1) 1.45s forwards}
+#splash .sp-coin{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:spPop .55s cubic-bezier(.3,1.6,.5,1) 2s forwards}
+#splash .sp-sw{transform:translateX(-430px);animation:spSweep 1.35s cubic-bezier(.42,0,.5,1) 2.4s both}
+#splash .sp-spk{transform-box:fill-box;transform-origin:center;transform:scale(0);opacity:0;animation:spStar .95s cubic-bezier(.3,.7,.3,1) var(--d) both}
+#splash .sp-nm{position:absolute;left:0;right:0;top:calc(41% + 31cqw);text-align:center;font-size:5.4cqw;font-weight:600;letter-spacing:.5em;text-indent:.5em;background:linear-gradient(100deg,#7a82a6 0%,#fff 45%,#7a82a6 60%,#dfe4ff 100%);background-size:260% 100%;background-position:100% 0;-webkit-background-clip:text;background-clip:text;color:transparent;opacity:0;animation:spUp .9s var(--e) 2.8s forwards,spMetal 2.2s ease-in-out 3s forwards}
+#splash .sp-tg{position:absolute;left:0;right:0;top:calc(41% + 39cqw);text-align:center;font-size:2.9cqw;letter-spacing:.16em;color:#7077a2;opacity:0;animation:spFade 1s ease 3.2s forwards}
+@keyframes spFade{to{opacity:1}}
+@keyframes spUp{from{opacity:0;transform:translateY(3cqw)}to{opacity:1;transform:none}}
+@keyframes spMetal{from{background-position:100% 0}to{background-position:0 0}}
+@keyframes spDraw{0%{stroke-dashoffset:100;opacity:0}2%{opacity:1}100%{stroke-dashoffset:0;opacity:1}}
+@keyframes spPop{to{transform:scale(1)}}
+@keyframes spSweep{from{transform:translateX(-430px)}to{transform:translateX(430px)}}
+@keyframes spStar{0%{transform:scale(0) rotate(-45deg);opacity:0}40%{transform:scale(1) rotate(0);opacity:1}100%{transform:scale(0) rotate(45deg);opacity:0}}
+@media (prefers-reduced-motion:reduce){#splash *{animation:none!important}#splash .sp-st,#splash .sp-fl,#splash .sp-nm,#splash .sp-tg,#splash .sp-glow{opacity:1;stroke-dashoffset:0}#splash .sp-coin{transform:none}#splash .sp-sw,#splash .sp-spk{display:none}}
+html.no-splash #splash{display:none}
+@supports not (width:1cqw){#splash{display:none}}
+</style>
+<link rel="stylesheet" href="style.css">
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js" defer></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="pro.js" defer></script>
     <script src="script.js" defer></script>
     <script src="biz.js" defer></script>
     <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 
 </head>
 <body id="bodyTag" class="dark-theme">
+<div id="splash" role="presentation" aria-hidden="true">
+  <div class="sp-stage">
+    <div class="sp-glow"></div>
+    <div class="sp-ic"><svg viewBox="0 0 512 512" aria-hidden="true"><defs>
+<linearGradient id="spF" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4338ca"/><stop offset="1" stop-color="#7c3aed"/></linearGradient>
+<linearGradient id="spO" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#7dd3fc"/></linearGradient>
+<linearGradient id="spG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#a5f3fc"/></linearGradient>
+<linearGradient id="spK" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fde68a"/><stop offset="1" stop-color="#f59e0b"/></linearGradient>
+<linearGradient id="spB" x1="0" y1="0" x2="1" y2="0"><stop offset="0.0" stop-color="#d4ecff" stop-opacity="0.002"/><stop offset="0.1" stop-color="#d4ecff" stop-opacity="0.018"/><stop offset="0.2" stop-color="#d4ecff" stop-opacity="0.105"/><stop offset="0.3" stop-color="#d4ecff" stop-opacity="0.368"/><stop offset="0.4" stop-color="#d4ecff" stop-opacity="0.779"/><stop offset="0.5" stop-color="#ffffff" stop-opacity="1.000"/><stop offset="0.6" stop-color="#ffe9f8" stop-opacity="0.779"/><stop offset="0.7" stop-color="#ffe9f8" stop-opacity="0.368"/><stop offset="0.8" stop-color="#ffe9f8" stop-opacity="0.105"/><stop offset="0.9" stop-color="#ffe9f8" stop-opacity="0.018"/><stop offset="1.0" stop-color="#ffe9f8" stop-opacity="0.002"/></linearGradient>
+<clipPath id="spQ"><rect width="512" height="512" rx="116"/></clipPath>
+</defs>
+<rect class="sp-fl" width="512" height="512" rx="116" fill="url(#spF)"/>
+<rect class="sp-st sp-o" x="2" y="2" width="508" height="508" rx="114" pathLength="100" stroke="url(#spO)"/>
+<path class="sp-st sp-c" pathLength="100" d="M380.1 151.9 A162 162 0 1 0 360.1 380.1" stroke="url(#spG)" stroke-width="46"/>
+<path class="sp-st sp-p" pathLength="100" d="M204 366 V146 H262 A62 62 0 0 1 262 270 H204" stroke="#fff" stroke-width="46"/>
+<g class="sp-coin"><circle cx="380.1" cy="151.9" r="40" fill="url(#spK)"/><circle cx="380.1" cy="151.9" r="25" fill="none" stroke="#a15a00" stroke-opacity=".4" stroke-width="5"/></g>
+<g clip-path="url(#spQ)" style="mix-blend-mode:screen"><g transform="rotate(45 256 256)">
+<rect class="sp-sw" x="76" y="-300" width="360" height="1100" fill="url(#spB)" fill-opacity=".65"/>
+<rect class="sp-sw" x="171" y="-300" width="170" height="1100" fill="url(#spB)" fill-opacity=".9" style="animation-delay:2.43s"/>
+<rect class="sp-sw" x="316" y="-300" width="16" height="1100" fill="url(#spB)" fill-opacity=".81" style="animation-delay:2.47s"/>
+</g></g>
+<g transform="translate(380.1 151.9)"><path class="sp-spk" style="--d:3.1s" d="M0 -64 C6 -12 12 -6 64 0 C12 6 6 12 0 64 C-6 12 -12 6 -64 0 C-12 -6 -6 -12 0 -64 Z" fill="#fff"/></g>
+<g transform="translate(118 338) scale(.55)"><path class="sp-spk" style="--d:3.4s" d="M0 -64 C6 -12 12 -6 64 0 C12 6 6 12 0 64 C-6 12 -12 6 -64 0 C-12 -6 -6 -12 0 -64 Z" fill="#fff"/></g>
+<g transform="translate(300 300) scale(.4)"><path class="sp-spk" style="--d:3.25s" d="M0 -64 C6 -12 12 -6 64 0 C12 6 6 12 0 64 C-6 12 -12 6 -64 0 C-12 -6 -6 -12 0 -64 Z" fill="#fff"/></g>
+</svg></div>
+    <div class="sp-nm">PROCASH</div>
+    <div class="sp-tg">आपका स्मार्ट हिसाब-किताब</div>
+  </div>
+</div>
+
 <div id="lockScreen" class="lock-overlay" style="display:none;">
   <div class="lock-card">
     <div class="lock-icon">🔒</div>
@@ -255,28 +328,37 @@ try { if (localStorage.getItem('userAppPinHash')) document.getElementById('lockS
 </div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD_6BP1eeFl7hlkuHnljJkLanB7N6Od2SM",
-  authDomain: "procase--manager.firebaseapp.com",
-  projectId: "procase--manager",
-  storageBucket: "procase--manager.firebasestorage.app",
-  messagingSenderId: "894543154228",
-  appId: "1:894543154228:web:fa7087e09aba5593904e61",
-  measurementId: "G-4FBRLCJC8H"
-};
-// Firebase लोड न हो (नेटवर्क/ब्लॉक) तब भी ऐप ऑफ़लाइन चलता रहे
-var db;
-try {
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  db = firebase.firestore();
-} catch (e) {
-  console.warn('Firebase उपलब्ध नहीं:', e.message);
-  db = undefined;
-}
-</script>
-<script>
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/service-worker.js').catch(() => {}));
 </script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// ओपनिंग एनिमेशन: ऐप तैयार होते ही (कम से कम 3.6 सेकंड (पूरा एनिमेशन दिखे) दिखकर) हटता है; 5 सेकंड में हर हाल में हट जाता है
+(function () {
+  var sp = document.getElementById('splash'), t0 = Date.now(), done = false;
+  function hide() {
+    if (done || !sp) return; done = true;
+    setTimeout(function () {
+      sp.classList.add('hide');
+      setTimeout(function () { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 700);
+    }, Math.max(0, 3600 - (Date.now() - t0)));
+  }
+  if (document.readyState !== 'loading') hide(); else document.addEventListener('DOMContentLoaded', hide);
+  setTimeout(hide, 5000);
+})();
+// भारी लाइब्रेरी ऐप शुरू होने के बाद लोड होती हैं, ताकि ऐप जल्दी खुले
+(function () {
+  function add(src, cb) { var s = document.createElement('script'); s.src = src; s.async = true; if (cb) s.onload = cb; document.head.appendChild(s); }
+  function css(href) { var l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; document.head.appendChild(l); }
+  function start() {
+    add('https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js', function () { try { if (typeof updateDashboard === 'function') updateDashboard(); } catch (e) {} });
+    css('https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css');
+    add('https://cdn.jsdelivr.net/npm/sweetalert2@11');
+    setTimeout(function () {
+      add('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+      add('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+    }, 2500);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
 </body>
 </html>

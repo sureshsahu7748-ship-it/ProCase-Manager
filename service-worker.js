@@ -1,6 +1,6 @@
- // ProCash Manager - Service Worker
+// ProCash Manager - Service Worker
 // हर बार ऐप की फ़ाइलें बदलें तो सिर्फ़ यह वर्ज़न नंबर बढ़ा दें (v26 -> v27)
-const CACHE_NAME = 'procash-v31';
+const CACHE_NAME = 'procash-v35';
 
 // ऐप की अपनी फ़ाइलें (ये ऑफ़लाइन के लिए पहले से सेव होंगी)
 const CORE_ASSETS = [
@@ -29,6 +29,14 @@ const CORE_ASSETS = [
   '/auth-firebase.js'
 ];
 
+const PRELOAD_CDN = [
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js',
+  'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js'
+];
+
 // बाहर की लाइब्रेरी (Chart.js, jsPDF, Firebase SDK आदि) - पहली बार ऑनलाइन खुलने पर अपने-आप सेव होंगी
 const CDN_HOSTS = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'www.gstatic.com'];
 
@@ -49,7 +57,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
       // एक फ़ाइल फ़ेल होने पर बाकी का इंस्टॉल न रुके, इसलिए अलग-अलग जोड़ते हैं
-      Promise.all(CORE_ASSETS.map((url) => cache.add(url).catch(() => null)))
+      Promise.all([
+        ...CORE_ASSETS.map((url) => cache.add(url).catch(() => null)),
+        // लॉगिन पेज और ऐप जल्दी खुलें, इसलिए Firebase की फ़ाइलें पहले से सेव (न मिलें तो कोई बात नहीं)
+        ...PRELOAD_CDN.map((url) => fetch(url).then((r) => (r && r.ok ? cache.put(url, r) : null)).catch(() => null))
+      ])
     )
   );
 });
@@ -77,18 +89,21 @@ self.addEventListener('fetch', (event) => {
   if (NEVER_CACHE_HOSTS.includes(url.hostname)) return;
   if (url.pathname.startsWith('/__/auth')) return; // Firebase login helper
 
-  // 1) पेज खोलना: पहले नेटवर्क, ऑफ़लाइन हो तो सेव किया हुआ index.html
+  // 1) पेज खोलना: कैश से तुरंत (ऐप झट से खुले), पीछे से नया वर्ज़न लाकर कैश अपडेट (नया वर्ज़न अगली बार दिखेगा)
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (isCacheable(res)) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match(req).then((r) => r || caches.match('/index.html')))
+      caches.match(req, { ignoreSearch: true }).then((cached) => {
+        const network = fetch(req)
+          .then((res) => {
+            if (isCacheable(res) && !res.redirected) {
+              const copy = res.clone();
+              caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+            }
+            return res;
+          })
+          .catch(() => cached || caches.match('/index.html'));
+        return cached || network;
+      })
     );
     return;
   }
@@ -112,18 +127,21 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3) अपनी फ़ाइलें: पहले नेटवर्क (ताकि अपडेट तुरंत दिखे), ऑफ़लाइन हो तो कैश
+  // 3) अपनी फ़ाइलें: कैश से तुरंत, पीछे से अपडेट (धीमे नेटवर्क पर भी ऐप तेज़ खुले)
   if (url.origin === self.location.origin) {
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (isCacheable(res)) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(req, copy));
-          }
-          return res;
-        })
-        .catch(() => caches.match(req))
+      caches.match(req).then((cached) => {
+        const network = fetch(req)
+          .then((res) => {
+            if (isCacheable(res)) {
+              const copy = res.clone();
+              caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+            }
+            return res;
+          })
+          .catch(() => cached);
+        return cached || network;
+      })
     );
   }
 });

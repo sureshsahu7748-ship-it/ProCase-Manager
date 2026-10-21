@@ -1,4 +1,4 @@
-     * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
 body { background-color: #f4f6f9; color: #333; display: flex; justify-content: center; padding: 15px; }
 body.dark-theme { background-color: #121212; color: #e0e0e0; }
 
@@ -379,8 +379,7 @@ button:active{transform:scale(.98)}
   position:sticky;
   top:0;
   z-index:50;
-  background:color-mix(in srgb,var(--bg) 92%,transparent);
-  backdrop-filter:blur(18px);
+  background:color-mix(in srgb,var(--bg) 97%,transparent);
   border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);
 }
 .brand-wrap{display:flex;align-items:center;gap:11px;min-width:0}
@@ -548,9 +547,9 @@ input:focus,select:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3
   width:min(610px,calc(100% - 30px));height:70px;
   display:grid;grid-template-columns:1fr 1fr 72px 1fr 1fr;align-items:center;
   padding:7px 9px;z-index:100;
-  background:color-mix(in srgb,var(--surface) 92%,transparent);
+  background:color-mix(in srgb,var(--surface) 97%,transparent);
   border:1px solid var(--line);border-radius:23px;
-  box-shadow:0 18px 45px rgba(0,0,0,.18);backdrop-filter:blur(18px)
+  box-shadow:0 10px 24px rgba(0,0,0,.16)
 }
 .page-nav-item{
   border:0;background:transparent;color:var(--muted);cursor:pointer;
@@ -668,7 +667,7 @@ body:not(.dark-theme) .app-sidebar{background:var(--surface);color:var(--text)}
    📱💻 RESPONSIVE: छोटे फ़ोन से बड़े डेस्कटॉप तक
    ========================================================= */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
-html,body{max-width:100%;overflow-x:hidden}
+html,body{max-width:100%;overflow-x:hidden;overflow-x:clip}
 img,svg{max-width:100%}
 .app-content{overflow-wrap:break-word}
 button,.page-nav-item,.group-chip,select{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -857,7 +856,7 @@ button:active:not(:disabled){transform:scale(.97);filter:brightness(1.08)}
 .settings-title{font-size:.78rem;font-weight:700;color:var(--muted);margin:0 4px 8px;letter-spacing:.02em}
 .settings-info-title{margin-top:26px}
 .settings-list{display:grid;gap:8px}
-.settings-row{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:14px;cursor:pointer;box-shadow:var(--shadow)}
+.settings-row{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:14px;cursor:pointer;box-shadow:none;contain:layout style}
 .settings-row:hover{border-color:var(--accent)}
 .settings-row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .s-ico{flex:0 0 38px;height:38px;display:grid;place-items:center;border-radius:11px;font-size:1.1rem;background:color-mix(in srgb,var(--accent) 14%,transparent)}
@@ -869,3 +868,11 @@ button:active:not(:disabled){transform:scale(.97);filter:brightness(1.08)}
 .settings-row.danger .s-ico{background:color-mix(in srgb,var(--danger) 14%,transparent)}
 .settings-row.danger .s-txt b{color:var(--danger)}
 .settings-row[hidden],.settings-group[hidden]{display:none!important}
+
+/* स्क्रॉल स्मूद करने के लिए भारी इफ़ेक्ट कम */
+.settings-row{box-shadow:none;contain:layout paint style}
+#page-more .settings-group,#page-more .info-card{content-visibility:auto;contain-intrinsic-size:auto 220px}
+
+/* स्क्रॉल सुगम: भारी चीज़ें स्क्रीन के बाहर हों तो बनाई ही न जाएँ */
+.settings-group,#page-more .info-card{content-visibility:auto;contain-intrinsic-size:auto 260px}
+#page-more .info-card{box-shadow:none}

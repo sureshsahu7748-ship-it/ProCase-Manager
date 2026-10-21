@@ -132,8 +132,9 @@ service cloud.firestore {
       allow update: if isMemberOf(resource.data)
         && request.auth.uid != resource.data.get('ownerUid', '')
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberUids'])
-        && request.resource.data.memberUids.toSet()
-             == resource.data.memberUids.toSet().difference([request.auth.uid].toSet());
+        && !(request.auth.uid in request.resource.data.memberUids)
+        && request.resource.data.memberUids.size() == resource.data.memberUids.size() - 1
+        && resource.data.memberUids.hasAll(request.resource.data.memberUids);
 
       // 4) नया सदस्य जुड़ना: सिर्फ़ ख़ुद को, एक नाम के साथ, और सिर्फ़ चालू इनवाइट से
       allow update: if signedIn()

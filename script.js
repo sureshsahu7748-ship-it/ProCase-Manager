@@ -1,4 +1,24 @@
- // अगर pro.js न चले (गलत फ़ाइल/नेटवर्क), तब भी ग्रुप जैसे बटन बेकार न पड़ें
+// Firebase की शुरुआत (SDK अब defer से लोड होता है, इसलिए यह यहीं से चलता है)
+const firebaseConfig = {
+  apiKey: "AIzaSyD_6BP1eeFl7hlkuHnljJkLanB7N6Od2SM",
+  authDomain: "procase--manager.firebaseapp.com",
+  projectId: "procase--manager",
+  storageBucket: "procase--manager.firebasestorage.app",
+  messagingSenderId: "894543154228",
+  appId: "1:894543154228:web:fa7087e09aba5593904e61",
+  measurementId: "G-4FBRLCJC8H"
+};
+// Firebase लोड न हो (नेटवर्क/ब्लॉक) तब भी ऐप ऑफ़लाइन चलता रहे
+var db;
+try {
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  db = firebase.firestore();
+} catch (e) {
+  console.warn('Firebase उपलब्ध नहीं:', e.message);
+  db = undefined;
+}
+
+// अगर pro.js न चले (गलत फ़ाइल/नेटवर्क), तब भी ग्रुप जैसे बटन बेकार न पड़ें
 if (!window.Plan) {
     console.warn('pro.js लोड नहीं हुआ: Pro जाँच अभी बंद है');
     window.Plan = { isPro: () => false, guard: () => true, attach() {}, detach() {}, openPaywall() {}, cancelNow: async () => {}, state: {} };
@@ -369,7 +389,7 @@ function initAuthSystem() {
             if (typeof firebase === "undefined" || !firebase.auth) {
                 return showToast('error', 'Firebase लोड नहीं हुआ है!');
             }
-            try { localStorage.removeItem('procash.loginSkippedAt'); } catch (_) {}
+            try { localStorage.removeItem('procash.loginSkippedAt'); localStorage.removeItem('procash.hasLoggedIn'); } catch (_) {}
             firebase.auth().signOut().then(() => {
                 showToast('info', "लॉगआउट सफल!");
                 closeSidebar();
@@ -390,7 +410,10 @@ function initAuthSystem() {
     if (typeof firebase !== "undefined" && firebase.auth) {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
+                // दूसरे खाते से लॉगिन हुआ हो तो पिछले खाते का डेटा अलग रखकर पेज दोबारा लोड करें
+                if (switchAccountDataIfNeeded(user)) { location.reload(); return; }
                 currentUser = user;
+                try { localStorage.setItem('procash.hasLoggedIn', '1'); } catch (_) {}
 
                 processPendingGroupInvite();
 
@@ -412,6 +435,8 @@ function initAuthSystem() {
                 Plan.attach(user);
             } else {
                 currentUser = null;
+                // लॉगआउट के बाद पिछले खाते का डेटा अलग रखा जाता है, ताकि अगला खाता उसे न देखे
+                if (stashDataOnLogout()) { location.reload(); return; }
                 requireLoginOnce();
                 stopGroupListeners();
                 toggleAccountDeleteCard();
@@ -1034,25 +1059,39 @@ async function syncGroupToFirebase() {
         : [activeGroup.ownerUid];
     activeGroup.inviteToken = activeGroup.inviteToken || generateInviteToken();
 
+    const isOwner = activeGroup.ownerUid === currentUser.uid;
+    const groupRef = db.collection("groups").doc(groupId);
+    const inviteRef = db.collection("groupInvites").doc(activeGroup.inviteToken);
+    const invitePayload = { groupId, ownerUid: activeGroup.ownerUid, active: true };
+
     try {
-        const batch = db.batch();
-        const groupRef = db.collection("groups").doc(groupId);
-        const inviteRef = db.collection("groupInvites").doc(activeGroup.inviteToken);
+        if (!isOwner) {
+            // सदस्य: सिर्फ़ खर्च की सूची लिखता है। सदस्य-सूची सर्वर की ही रहती है (पुरानी कॉपी से किसी को वापस जोड़ना/हटाना नहीं)
+            await groupRef.update({ groupId, expenses: activeGroup.expenses || [] });
+        } else {
+            let exists = null;                       // null = पता नहीं (जैसे ऑफ़लाइन)
+            try { exists = (await groupRef.get()).exists; }
+            catch (e) { exists = (e && e.code === 'permission-denied') ? false : null; }
 
-        batch.set(groupRef, activeGroup);
-        if (activeGroup.ownerUid === currentUser.uid) {
-            batch.set(inviteRef, {
-                groupId,
-                ownerUid: activeGroup.ownerUid,
-                active: true
-            }, { merge: true });
+            const batch = db.batch();
+            if (exists !== true) {
+                batch.set(groupRef, activeGroup);    // नया ग्रुप (या ऑफ़लाइन, पता नहीं): ग्रुप और इनवाइट एक ही batch में
+            } else {
+                // पहले से बना ग्रुप: memberUids/members नहीं भेजते, ताकि जुड़ चुके या निकल चुके लोग न बदलें
+                batch.update(groupRef, {
+                    groupId,
+                    name: activeGroup.name,
+                    expenses: activeGroup.expenses || [],
+                    inviteToken: activeGroup.inviteToken
+                });
+            }
+            batch.set(inviteRef, invitePayload, { merge: true });
+            await batch.commit();
         }
-
-        await batch.commit();
         persistActiveGroup();
         return true;
     } catch (error) {
-        console.error('Group sync failed:', error);
+        console.error('Group sync failed:', error && error.code, error);
         showToast('error', 'Group save नहीं हुआ। Firebase Rules check करें।');
         return false;
     }
@@ -1185,8 +1224,19 @@ function stopGroupListeners() {
 function removeGroupLocally(id) {
     if (!myGroups[id]) return;
     delete myGroups[id];
-    if (activeGroup && groupIdOf(activeGroup) === id) activeGroup = null;
+    if (activeGroup && groupIdOf(activeGroup) === id) {
+        activeGroup = null;
+        localStorage.removeItem('activeGroup');   // पुरानी कॉपी अगली बार वापस न आए
+    }
     localStorage.setItem('myGroups', JSON.stringify(myGroups));
+}
+
+// सर्वर की सूची में जो ग्रुप नहीं है (आप निकल चुके/निकाले गए), उसे फ़ोन की पुरानी कॉपी से भी हटाएँ
+function dropStaleGroups(serverIds) {
+    const me = currentUser && currentUser.uid;
+    const stale = (g) => g && g.ownerUid !== me && !serverIds.has(groupIdOf(g));
+    Object.keys(myGroups).forEach((id) => { if (stale(myGroups[id])) removeGroupLocally(id); });
+    if (stale(activeGroup)) { activeGroup = null; localStorage.removeItem('activeGroup'); }
 }
 
 function mergeGroupFromServer(id, data) {
@@ -1244,6 +1294,7 @@ function listenToAllGroups() {
     const unsub = db.collection('groups')
         .where('memberUids', 'array-contains', currentUser.uid)
         .onSnapshot((snapshot) => {
+            if (!snapshot.metadata.fromCache) dropStaleGroups(new Set(snapshot.docs.map((d) => d.id)));
             snapshot.docChanges().forEach((change) => {
                 const id = change.doc.id;
                 if (change.type === 'removed') removeGroupLocally(id);
@@ -1685,13 +1736,23 @@ function initSplitSystem() {
             if (!currentUser || !activeGroup || typeof db === 'undefined') return showToast('warning', 'पहले लॉगिन करें।');
             if (!confirm(`"${activeGroup.name}" ग्रुप छोड़ना चाहते हैं? पुराना हिसाब बाकी सदस्यों के पास रहेगा।`)) return;
             const id = groupIdOf(activeGroup);
+            const groupRef = db.collection('groups').doc(id);
             try {
-                await db.collection('groups').doc(id).update({
-                    memberUids: firebase.firestore.FieldValue.arrayRemove(currentUser.uid)
-                });
+                await groupRef.update({ memberUids: firebase.firestore.FieldValue.arrayRemove(currentUser.uid) });
             } catch (error) {
-                console.error('Leave group failed:', error);
-                return showToast('error', 'ग्रुप छोड़ नहीं पाए। Firebase Rules जाँचें।');
+                console.error('Leave group failed:', error && error.code, error);
+                if (!(error && error.code === 'permission-denied')) {
+                    return showToast('error', 'ग्रुप छोड़ नहीं पाए। इंटरनेट जाँचकर फिर कोशिश करें।');
+                }
+                // अनुमति नहीं मिली: या तो आप पहले ही निकल चुके हैं (फ़ोन में पुरानी कॉपी थी), या Rules ने रोका। सर्वर से पूछकर तय करें
+                let stillMember = false;
+                try {
+                    const snap = await groupRef.get();
+                    stillMember = snap.exists && (snap.data().memberUids || []).includes(currentUser.uid);
+                } catch (_) { stillMember = false; }   // पढ़ भी नहीं सकते = अब सदस्य नहीं हैं
+                if (stillMember) {
+                    return showToast('error', 'ग्रुप छोड़ने की अनुमति नहीं मिली। Firestore Rules में नया नियम Publish करें।');
+                }
             }
             removeGroupLocally(id);
             const rest = Object.keys(myGroups);
@@ -2319,6 +2380,50 @@ function requireLoginOnce() {
         }
         location.replace('/auth.html?next=/');
     } catch (_) { /* कुछ गड़बड़ हो तो ऐप चलने दें */ }
+}
+
+// एक ही फ़ोन पर खाता बदलने पर पिछले खाते का बजट/खर्च/ग्रुप नए खाते में न दिखे
+function stashDataOnLogout() {
+    try {
+        const last = localStorage.getItem('procash.lastUid');
+        if (!last) return false;
+        const KEYS = ['expenses', 'userIncome', 'categoryBudgets', 'myGroups', 'activeGroup', 'unsyncedChanges', 'procash.biz.v1'];
+        const stash = {};
+        KEYS.forEach((k) => { const v = localStorage.getItem(k); if (v !== null) stash[k] = v; localStorage.removeItem(k); });
+        localStorage.setItem('procash.data.' + last, JSON.stringify(stash));
+        localStorage.removeItem('procash.lastUid');
+        localStorage.removeItem('procash.hasLoggedIn');
+        return true;
+    } catch (_) { return false; }
+}
+
+function switchAccountDataIfNeeded(user) {
+    try {
+        const KEYS = ['expenses', 'userIncome', 'categoryBudgets', 'myGroups', 'activeGroup', 'unsyncedChanges', 'procash.biz.v1'];
+        const last = localStorage.getItem('procash.lastUid');
+        if (!last) {
+            // लॉगआउट के बाद लौटे हैं: इस खाते का अलग रखा डेटा वापस लाएँ (बशर्ते अभी का डेटा खाली हो)
+            const mine0 = JSON.parse(localStorage.getItem('procash.data.' + user.uid) || 'null');
+            localStorage.setItem('procash.lastUid', user.uid);
+            let liveEmpty = true;
+            try { liveEmpty = !(JSON.parse(localStorage.getItem('expenses') || '[]') || []).length; } catch (_) {}
+            if (mine0 && liveEmpty) {
+                Object.keys(mine0).forEach((k) => localStorage.setItem(k, mine0[k]));
+                localStorage.removeItem('procash.data.' + user.uid);
+                return true;
+            }
+            return false;
+        }
+        if (last === user.uid) return false;
+        const stash = {};
+        KEYS.forEach((k) => { const v = localStorage.getItem(k); if (v !== null) stash[k] = v; localStorage.removeItem(k); });
+        localStorage.setItem('procash.data.' + last, JSON.stringify(stash));
+        const mine = JSON.parse(localStorage.getItem('procash.data.' + user.uid) || 'null');
+        if (mine) Object.keys(mine).forEach((k) => localStorage.setItem(k, mine[k]));
+        localStorage.removeItem('procash.data.' + user.uid);
+        localStorage.setItem('procash.lastUid', user.uid);
+        return true;
+    } catch (_) { return false; }
 }
 
 async function deleteMyAccount() {

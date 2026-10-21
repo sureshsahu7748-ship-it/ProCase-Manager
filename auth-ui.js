@@ -10,7 +10,10 @@ const next = (() => {
   const n = new URLSearchParams(location.search).get("next") || "/";
   return /^\/(?!\/)/.test(n) ? n : "/";
 })();
-const go = () => location.replace(next);
+const go = (loggedIn = true) => {
+  if (loggedIn) { try { localStorage.setItem("procash.hasLoggedIn", "1"); } catch (_) {} }
+  location.replace(next);
+};
 
 const rules = {
   name: (v) => v.trim().length >= 2 || "नाम कम से कम 2 अक्षर का हो।",
@@ -154,7 +157,7 @@ document.querySelectorAll(".gbtn").forEach((b) => b.addEventListener("click", as
 }));
 document.querySelectorAll(".skip").forEach((b) => b.addEventListener("click", () => {
   try { localStorage.setItem("procash.loginSkippedAt", String(Date.now())); } catch (_) {}
-  go();
+  go(false);
 }));
 redirectResult().catch((err) => say($("#loginForm .alert"), errorText(err), "err"));
 onUser((u) => { if (u && !working) go(); });
