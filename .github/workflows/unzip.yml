@@ -1,0 +1,19 @@
+name: Unzip and deploy
+on:
+  push:
+    paths: ['*.zip']
+permissions:
+  contents: write
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          for z in *.zip; do unzip -oq "$z" -d /tmp/new; rm "$z"; done
+          cp -a /tmp/new/. .
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git commit -m "Update from zip" || echo "no changes"
+          git push
